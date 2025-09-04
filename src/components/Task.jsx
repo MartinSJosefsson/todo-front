@@ -136,6 +136,11 @@ const Task = () => {
         });
     };
 
+    const isOverdue = (task) => {
+        if (!task.dueDate || task.status === "completed") return false;
+        return new Date(task.dueDate) < new Date();
+    };
+
     return (
         <div className="dashboard-layout">
             <Sidebar isOpen={false} onClose={() => {}} />
@@ -266,22 +271,36 @@ const Task = () => {
                                                     <div className="flex-grow-1">
                                                         <h6 className="mb-1">{task.title}</h6>
                                                         <p className="mb-1 text-muted small">{task.description}</p>
-                                                        <div className="d-flex align-items-center flex-wrap">
-                                                            <small className="text-muted me-2">
-                                                                <i className="bi bi-clock"></i> Created: {formatDateTime(task.createdAt)}
-                                                            </small>
-                                                            {task.dueDate && (
-                                                                <small className="text-muted me-2">
-                                                                    <i className="bi bi-calendar-event"></i> Due: {formatDateTime(task.dueDate)}
-                                                                </small>
-                                                            )}
-                                                            {task.assignedTo && (
-                                                                <span className="badge bg-info me-2">
+
+                                                        {/* Assigned person */}
+                                                        {task.assignedTo && (
+                                                            <div className="mb-1">
+                                                                <span className="badge bg-info">
                                                                     <i className="bi bi-person"></i> {task.assignedTo}
                                                                 </span>
-                                                            )}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Due date with overdue highlighting + badge */}
+                                                        {task.dueDate && (
+                                                            <div className="mb-1">
+                                                                <small className={isOverdue(task) ? "text-danger fw-bold" : "text-muted"}>
+                                                                    <i className="bi bi-calendar-event"></i> Due: {formatDateTime(task.dueDate)}
+                                                                </small>
+                                                                {isOverdue(task) && (
+                                                                    <span className="badge bg-danger ms-2">Overdue</span>
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Created date */}
+                                                        <div className="mb-1">
+                                                            <small className="text-muted">
+                                                                <i className="bi bi-clock"></i> Created: {formatDateTime(task.createdAt)}
+                                                            </small>
                                                         </div>
                                                     </div>
+
                                                     <div className="btn-group ms-3">
                                                         <button
                                                             className={getStatusButtonClass(task.status)}
