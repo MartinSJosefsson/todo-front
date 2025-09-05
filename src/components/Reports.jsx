@@ -1,11 +1,12 @@
 import React from "react";
+import DashboardLayout from "./DashboardLayout";
 
 const Reports = () => {
-    return (
-        <div className="p-4">
-            <h1>Reports</h1>
-        </div>
-    );
+  return (
+    <DashboardLayout title="Reports" subtitle="View reports and analytics">
+      <h1>Reports</h1>
+    </DashboardLayout>
+  );
 };
 
 export default Reports;
