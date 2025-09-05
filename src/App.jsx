@@ -4,8 +4,8 @@ import Calendar from "./components/Calendar";
 import Teams from "./components/Teams";
 import Reports from "./components/Reports";
 import Login from "./components/Login";
+import Dashboard from "./components/Dashboard"; // optional
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import Dashboard from "./components/Dashboard"; // optional dashboard landing page
 
 function PrivateRoute({ children }) {
   const { user } = useAuth();
@@ -17,10 +17,8 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Login */}
           <Route path="/login" element={<Login />} />
 
-          {/* Dashboard pages */}
           <Route
             path="/dashboard/tasks"
             element={
@@ -59,12 +57,12 @@ function App() {
             path="/dashboard"
             element={
               <PrivateRoute>
-                <Dashboard /> {/* or use <Navigate to="/dashboard/tasks" replace /> */}
+                <Dashboard />
               </PrivateRoute>
             }
           />
 
-          {/* Default root */}
+          {/* Default route */}
           <Route path="/" element={<Navigate to="/login" />} />
         </Routes>
       </Router>

@@ -1,100 +1,55 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authService } from '../services/authService';
-import { initializeWindowEvents, removeWindowEvents } from '../utils/windowEvents';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { authService } from "../services/authService";
 
-const AuthContext = createContext(null);
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState(null);
 
+  useEffect(() => {
+    const token = authService.getToken();
+    if (token) {
+      // Normally decode the token to extract roles; for now we fake user object
+      setUser({ name: "Logged User", email: "user@test.se", roles: ["USER"] });
+    }
+  }, []);
 
-    useEffect(() => {
-        const initializeAuth = () => {
-            const currentUser = authService.getCurrentUser();
-            const currentToken = authService.getToken();
+  const login = async (username, password) => {
+    const token = await authService.login(username, password);
 
-            setUser(currentUser);
-            setToken(currentToken);
-            setIsLoading(false);
-        };
+    // TODO: decode token for roles (jwt-decode can be used)
+    setUser({
+      name: username,
+      email: username + "@test.se",
+      roles: username === "admin" ? ["ADMIN"] : ["USER"],
+    });
 
-        initializeAuth();
+    return token;
+  };
 
-        // Initialize window events only if there's a token
-        let cleanup;
-        if (token) {
-            cleanup = initializeWindowEvents(() => {
-                // Don't need to do anything here, handleUnload will handle the logout
-                setUser(null);
-                setToken(null);
-            });
-        }
+  const logout = () => {
+    authService.logout();
+    setUser(null);
+  };
 
-        return () => {
-            if (cleanup) {
-                cleanup();
-            }
-            removeWindowEvents();
-        };
-    }, [token]);
-
-
-
-
-    const login = async (email, password) => {
-        try {
-            const response = await authService.login(email, password);
-            setUser(response);
-            setToken(response.token);
-            return response;
-        } catch (error) {
-            throw error;
-        }
-    };
-
-    const logout = async () => {
-        try {
-            await authService.logout();
-            setUser(null);
-            setToken(null);
-        } catch (error) {
-            console.error('Logout error:', error);
-            throw error;
-        }
-    };
-
-    const hasRole = (role) => {
-        return authService.hasRole(user, role);
-    };
-
-    const isAdmin = () => {
-        return authService.isAdmin(user);
-    };
-
-    return (
-        <AuthContext.Provider
-            value={{
-                user,
-                token,
-                isLoading,
-                isAuthenticated: !!token,
-                login,
-                logout,
-                hasRole,
-                isAdmin
-            }}
-        >
-            {!isLoading && children}
-        </AuthContext.Provider>
+  const hasRole = (role) => {
+    if (!user?.roles) return false;
+    const normalizedRoles = user.roles.map((r) =>
+      r.replace(/^ROLE_/, "").toUpperCase()
     );
+    const normalizedCheck = role.replace(/^ROLE_/, "").toUpperCase();
+    return normalizedRoles.includes(normalizedCheck);
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, login, logout, hasRole }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
+  return ctx;
 };

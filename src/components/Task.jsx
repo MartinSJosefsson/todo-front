@@ -6,28 +6,41 @@ import {
   updateTodoApi,
   deleteTodoApi,
 } from "../services/taskService";
+import { getAllUsersApi } from "../services/userService";
 import "./Task.css";
 
 const Task = () => {
   const [tasks, setTasks] = useState([]);
+  const [users, setUsers] = useState([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [person, setPerson] = useState("");
-  const [attachments, setAttachments] = useState([]);
+  const [personId, setPersonId] = useState("");
   const [editTaskId, setEditTaskId] = useState(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchTasks();
+    fetchUsers();
   }, []);
 
   const fetchTasks = async () => {
     try {
       const data = await getAllTodosApi();
       setTasks(data || []);
+      console.log("Fetched tasks:", data);
     } catch (error) {
       console.error("Error fetching tasks:", error);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const data = await getAllUsersApi();
+      setUsers(data || []);
+      console.log("Fetched users:", data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
     }
   };
 
@@ -35,43 +48,20 @@ const Task = () => {
     setTitle("");
     setDescription("");
     setDueDate("");
-    setPerson("");
-    setAttachments([]);
+    setPersonId("");
     setEditTaskId(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const handleFileChange = (e) => {
-    const chosen = Array.from(e.target.files || []);
-    if (chosen.length === 0) return;
-
-    setAttachments((prev) => {
-      const next = [...prev];
-      chosen.forEach((f) => {
-        const exists = next.some(
-          (g) =>
-            g.name === f.name &&
-            g.size === f.size &&
-            g.lastModified === f.lastModified
-        );
-        if (!exists) next.push(f);
-      });
-      return next;
-    });
-  };
-
-  const handleRemoveFile = (index) => {
-    setAttachments(attachments.filter((_, i) => i !== index));
-  };
-
-  const handleClearPicker = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const taskData = { title, description, dueDate, assignedTo: person };
+      const taskData = {
+        title,
+        description,
+        dueDate,
+        personId: personId ? Number(personId) : null, // ✅ correct field for backend
+      };
 
       if (editTaskId) {
         await updateTodoApi(editTaskId, taskData);
@@ -91,9 +81,7 @@ const Task = () => {
     setTitle(task.title);
     setDescription(task.description || "");
     setDueDate(task.dueDate || "");
-    setPerson(task.assignedTo || "");
-    setAttachments([]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    setPersonId(task.personId || "");
   };
 
   const handleDelete = async (id) => {
@@ -152,14 +140,28 @@ const Task = () => {
     return new Date(task.dueDate) < new Date();
   };
 
+  // Friendly mapping
+  const nameMapping = {
+    admin: "Mehrdad Javan",
+    user1: "Martin Josefsson",
+    user2: "Fredrik Odin",
+  };
+
+  const getUserName = (id) => {
+    if (!id) return "Unassigned";
+    const user = users.find((u) => u.id === Number(id));
+    if (!user) return "Unknown User";
+
+    const username = user.username || user.email;
+    const key = username.split("@")[0].toLowerCase();
+    return nameMapping[key] || username;
+  };
+
   return (
-    <DashboardLayout
-      title="Tasks"
-      subtitle="Manage and organize your tasks"
-    >
+    <DashboardLayout title="Tasks" subtitle="Manage and organize your tasks">
       <div className="row">
         <div className="col-md-8 mx-auto">
-          {/* Add/Edit Task Form */}
+          {/* Task Form */}
           <div className="card shadow-sm task-form-section">
             <div className="card-body">
               <h2 className="card-title mb-4">
@@ -199,57 +201,24 @@ const Task = () => {
                     <label className="form-label">Assign to Person</label>
                     <select
                       className="form-select"
-                      value={person}
-                      onChange={(e) => setPerson(e.target.value)}
+                      value={personId}
+                      onChange={(e) => setPersonId(e.target.value)}
                     >
-                      <option value="">
-                        -- Select Person (Optional) --
-                      </option>
-                      <option value="1">Mehrdad Javan</option>
-                      <option value="2">Simon Elbrink</option>
+                      <option value="">-- Select Person (Optional) --</option>
+                      {users.map((u) => {
+                        const key = (u.username || u.email)
+                          ?.split("@")[0]
+                          .toLowerCase();
+                        const displayName =
+                          nameMapping[key] || u.username || u.email;
+                        return (
+                          <option key={u.id} value={u.id}>
+                            {displayName}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
-                </div>
-
-                {/* Attachments */}
-                <div className="mb-3">
-                  <label className="form-label">Attachments</label>
-                  <div className="input-group mb-3">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      className="form-control"
-                      id="todoAttachments"
-                      multiple
-                      onChange={handleFileChange}
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary"
-                      onClick={handleClearPicker}
-                    >
-                      <i className="bi bi-x-lg"></i> Clear
-                    </button>
-                  </div>
-                  {attachments.length > 0 && (
-                    <div className="file-list">
-                      {attachments.map((file, index) => (
-                        <div
-                          key={`${file.name}-${file.size}-${file.lastModified}`}
-                          className="d-flex align-items-center mb-1"
-                        >
-                          <small className="me-2">{file.name}</small>
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => handleRemoveFile(index)}
-                          >
-                            <i className="bi bi-x-lg"></i>
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 <div className="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -292,16 +261,16 @@ const Task = () => {
                         </p>
 
                         {/* Assigned person */}
-                        {task.assignedTo && (
+                        {task.personId && (
                           <div className="mb-1">
                             <span className="badge bg-info">
                               <i className="bi bi-person"></i>{" "}
-                              {task.assignedTo}
+                              {getUserName(task.personId)}
                             </span>
                           </div>
                         )}
 
-                        {/* Due date with overdue highlighting */}
+                        {/* Due date */}
                         {task.dueDate && (
                           <div className="mb-1">
                             <small

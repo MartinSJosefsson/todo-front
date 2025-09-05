@@ -1,135 +1,59 @@
-
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './LoginForm.css';
-import { useAuth } from '../context/AuthContext.jsx';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const LoginForm = () => {
-    const navigate = useNavigate();
-    const { login } = useAuth();
-    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-    const [formData, setFormData] = useState({
-        username: '',
-        password: ''
-    });
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
-    const handleInputChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-        setError('');
-    };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await login(username, password);
+      navigate("/dashboard");
+    } catch (err) {
+      console.error("Login failed:", err);
+      setError("Invalid username or password");
+    }
+  };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
-        setError('');
-
-        try {
-            await login(formData.username, formData.password);
-            navigate('/dashboard');
-        } catch (err) {
-            setError(err.message || 'An error occurred. Please try again.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-        <div className="col-12 col-md-8 login-form-container">
-            <div className="login-form-wrapper">
-                <div className="mobile-brand d-md-none">
-                    <i className="bi bi-card-checklist"></i>
-                    <h4>To-do App</h4>
-                </div>
-
-                <div className="login-header">
-                    <h1>
-                        <i className="bi bi-check2-square"></i>
-                        <span>Login</span>
-                    </h1>
-                    <p>Enter your credentials to access your account</p>
-                </div>
-
-                {error && (
-                    <div className="alert alert-danger" role="alert">
-                        {error}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="login-form">
-                    <div className="form-group">
-                        <label htmlFor="username">Username</label>
-                        <div className="input-group">
-                            <i className="bi bi-person input-icon"></i>
-                            <input
-                                type="text"
-                                id="username"
-                                name="username"
-                                className="form-input"
-                                placeholder="Enter your username"
-                                value={formData.username}
-                                onChange={handleInputChange}
-                                required
-                                disabled={isLoading}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="password">Password</label>
-                        <div className="input-group">
-                            <i className="bi bi-lock input-icon"></i>
-                            <input
-                                type={isPasswordVisible ? "text" : "password"}
-                                id="password"
-                                name="password"
-                                className="form-input"
-                                placeholder="Enter your password"
-                                value={formData.password}
-                                onChange={handleInputChange}
-                                required
-                                disabled={isLoading}
-                            />
-                            <button
-                                type="button"
-                                className="password-toggle"
-                                onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                                disabled={isLoading}
-                            >
-                                <i className={`bi bi-eye${isPasswordVisible ? '-slash' : ''}`}></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="login-button"
-                        disabled={isLoading}
-                    >
-                        {isLoading ? (
-                            <>
-                                <span>Signing In</span>
-                                <i className="bi bi-arrow-repeat spin"></i>
-                            </>
-                        ) : (
-                            <>
-                                <span>Sign In</span>
-                                <i className="bi bi-arrow-right"></i>
-                            </>
-                        )}
-                    </button>
-                </form>
-
-                <div className="mobile-footer d-md-none">
-                    <p>© 2025 To-do App. All rights reserved.</p>
-                </div>
-            </div>
-        </div>
-    );
+  return (
+    <div className="col-md-6 d-flex align-items-center justify-content-center bg-light">
+      <div className="p-5 w-100" style={{ maxWidth: "400px" }}>
+        <h2 className="mb-4">Login</h2>
+        {error && <div className="alert alert-danger">{error}</div>}
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label className="form-label">Username</label>
+            <input
+              type="text"
+              className="form-control"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              autoFocus
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Password</label>
+            <input
+              type="password"
+              className="form-control"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <button type="submit" className="btn btn-primary w-100">
+            Login
+          </button>
+        </form>
+      </div>
+    </div>
+  );
 };
 
 export default LoginForm;
