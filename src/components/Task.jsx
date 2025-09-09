@@ -60,7 +60,7 @@ const Task = () => {
         title,
         description,
         dueDate,
-        personId: personId ? Number(personId) : null, // ✅ correct field for backend
+        personId: personId ? Number(personId) : null,
       };
 
       if (editTaskId) {
