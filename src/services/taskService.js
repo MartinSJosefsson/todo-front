@@ -21,7 +21,6 @@ axiosInstance.interceptors.request.use((config) => {
 });
 
 // --- CRUD APIs ---
-
 export const getAllTodosApi = async () => {
   const response = await axiosInstance.get("");
   return response.data;
@@ -41,8 +40,7 @@ export const deleteTodoApi = async (id) => {
   await axiosInstance.delete(`/${id}`);
 };
 
-// --- Attachment APIs (if used later) ---
-
+// --- Attachment APIs ---
 export const uploadAttachmentsApi = async (id, files) => {
   const formData = new FormData();
   files.forEach((file) => formData.append("files", file));
