@@ -2,16 +2,14 @@ import axios from "axios";
 
 const API_URL = "http://localhost:9090/api/todos";
 
-// Create axios instance with token
+// Create axios instance
 const axiosInstance = axios.create({
   baseURL: API_URL,
   withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
 });
 
-// Add JWT token if available
+// 🔑 Attach JWT from localStorage if available
 axiosInstance.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -21,6 +19,7 @@ axiosInstance.interceptors.request.use((config) => {
 });
 
 // --- CRUD APIs ---
+
 export const getAllTodosApi = async () => {
   const response = await axiosInstance.get("");
   return response.data;
@@ -41,6 +40,7 @@ export const deleteTodoApi = async (id) => {
 };
 
 // --- Attachment APIs ---
+
 export const uploadAttachmentsApi = async (id, files) => {
   const formData = new FormData();
   files.forEach((file) => formData.append("files", file));
