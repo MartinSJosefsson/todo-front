@@ -1,69 +1,43 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Task from "./components/Task";
-import Calendar from "./components/Calendar";
-import Teams from "./components/Teams";
-import Reports from "./components/Reports";
-import Login from "./components/Login";
-import Dashboard from "./components/Dashboard"; // optional
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
+import Login from "./components/Login.jsx";
+import Task from "./components/Task.jsx";
+import Dashboard from "./components/Dashboard.jsx";
 
-function PrivateRoute({ children }) {
+// Protect routes that require login
+const PrivateRoute = ({ children }) => {
   const { user } = useAuth();
-  return user ? children : <Navigate to="/login" />;
-}
+  return user ? children : <Navigate to="/login" replace />;
+};
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
+          {/* Public route */}
           <Route path="/login" element={<Login />} />
 
+          {/* Protected routes */}
           <Route
-            path="/dashboard/tasks"
-            element={
-              <PrivateRoute>
-                <Task />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/dashboard/calendar"
-            element={
-              <PrivateRoute>
-                <Calendar />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/dashboard/teams"
-            element={
-              <PrivateRoute>
-                <Teams />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/dashboard/reports"
-            element={
-              <PrivateRoute>
-                <Reports />
-              </PrivateRoute>
-            }
-          />
-
-          {/* Dashboard root */}
-          <Route
-            path="/dashboard"
+            path="/"
             element={
               <PrivateRoute>
                 <Dashboard />
               </PrivateRoute>
             }
           />
+          <Route
+            path="/tasks"
+            element={
+              <PrivateRoute>
+                <Task />
+              </PrivateRoute>
+            }
+          />
 
-          {/* Default route */}
-          <Route path="/" element={<Navigate to="/login" />} />
+          {/* Default redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </AuthProvider>

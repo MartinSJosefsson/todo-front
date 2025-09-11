@@ -28,7 +28,6 @@ const Task = () => {
     try {
       const data = await getAllTodosApi();
       setTasks(data || []);
-      console.log("Fetched tasks:", data);
     } catch (error) {
       console.error("Error fetching tasks:", error);
     }
@@ -38,7 +37,6 @@ const Task = () => {
     try {
       const data = await getAllUsersApi();
       setUsers(data || []);
-      console.log("Fetched users:", data);
     } catch (error) {
       console.error("Error fetching users:", error);
     }
@@ -140,7 +138,6 @@ const Task = () => {
     return new Date(task.dueDate) < new Date();
   };
 
-  // Friendly mapping
   const nameMapping = {
     admin: "Mehrdad Javan",
     user1: "Martin Josefsson",

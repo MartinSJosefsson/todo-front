@@ -2,68 +2,26 @@ import axios from "axios";
 
 const API_URL = "http://localhost:9090/api/todos";
 
-// Create axios instance
-const axiosInstance = axios.create({
-  baseURL: API_URL,
-  withCredentials: true,
-  headers: { "Content-Type": "application/json" },
-});
-
-// 🔑 Attach JWT from localStorage if available
-axiosInstance.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// --- CRUD APIs ---
+const getAuthHeaders = () => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  return user && user.token ? { Authorization: `Bearer ${user.token}` } : {};
+};
 
 export const getAllTodosApi = async () => {
-  const response = await axiosInstance.get("");
+  const response = await axios.get(API_URL, { headers: getAuthHeaders() });
   return response.data;
 };
 
-export const createTodoApi = async (todoData) => {
-  const response = await axiosInstance.post("", todoData);
+export const createTodoApi = async (todo) => {
+  const response = await axios.post(API_URL, todo, { headers: getAuthHeaders() });
   return response.data;
 };
 
-export const updateTodoApi = async (id, todoData) => {
-  const response = await axiosInstance.put(`/${id}`, todoData);
+export const updateTodoApi = async (id, todo) => {
+  const response = await axios.put(`${API_URL}/${id}`, todo, { headers: getAuthHeaders() });
   return response.data;
 };
 
 export const deleteTodoApi = async (id) => {
-  await axiosInstance.delete(`/${id}`);
-};
-
-// --- Attachment APIs ---
-
-export const uploadAttachmentsApi = async (id, files) => {
-  const formData = new FormData();
-  files.forEach((file) => formData.append("files", file));
-
-  const response = await axiosInstance.post(`/${id}/attachments`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-  return response.data;
-};
-
-export const getAttachmentsApi = async (id) => {
-  const response = await axiosInstance.get(`/${id}/attachments`);
-  return response.data;
-};
-
-export const downloadAttachmentApi = async (todoId, attachmentId) => {
-  const response = await axiosInstance.get(
-    `/${todoId}/attachments/${attachmentId}`,
-    { responseType: "blob" }
-  );
-  return response.data;
-};
-
-export const deleteAttachmentApi = async (todoId, attachmentId) => {
-  await axiosInstance.delete(`/${todoId}/attachments/${attachmentId}`);
+  await axios.delete(`${API_URL}/${id}`, { headers: getAuthHeaders() });
 };

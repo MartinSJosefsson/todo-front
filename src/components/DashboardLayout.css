@@ -1,0 +1,12 @@
+.dashboard-container {
+  display: flex;
+}
+
+.dashboard-content {
+  margin-left: 220px; /* matches sidebar width */
+  padding: 20px;
+  width: calc(100% - 220px);
+  min-height: 100vh;
+  background-color: #f4f6f8;
+  box-sizing: border-box;
+}

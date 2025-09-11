@@ -1,131 +1,47 @@
 import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import "./Sidebar.css";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import "./Sidebar.css";
 
-const Sidebar = ({ isOpen, onClose }) => {
+const Sidebar = () => {
+  const { logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const { user, logout, hasRole } = useAuth();
 
-  const navItems = [
-    {
-      icon: "bi-grid",
-      text: "Dashboard",
-      path: "/dashboard",
-      roles: ["ROLE_ADMIN"], // Only show for admin
-    },
-    {
-      icon: "bi-list-task",
-      text: "Tasks",
-      path: "/dashboard/tasks",
-      roles: ["ROLE_USER", "ROLE_ADMIN"], // Show for both
-    },
-    {
-      icon: "bi-calendar3",
-      text: "Calendar",
-      path: "/dashboard/calendar",
-      roles: ["ROLE_USER", "ROLE_ADMIN"],
-    },
-    {
-      icon: "bi-people",
-      text: "Teams",
-      path: "/dashboard/teams",
-      roles: ["ROLE_ADMIN"], // Only show for admin
-    },
-    {
-      icon: "bi-graph-up",
-      text: "Reports",
-      path: "/dashboard/reports",
-      roles: ["ROLE_ADMIN"], // Only show for admin
-    },
-  ];
-
-  const handleNavigation = (path) => {
-    navigate(path);
-    onClose?.();
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
   };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate("/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
-  };
-
-  // Normalize role checking (handles both "ROLE_ADMIN" and "ADMIN")
-  const userHasRole = (requiredRoles = []) => {
-    if (!requiredRoles.length) return true;
-    return requiredRoles.some((role) => {
-      const plain = role.replace(/^ROLE_/, ""); // "ROLE_ADMIN" -> "ADMIN"
-      return hasRole(role) || hasRole(plain);
-    });
-  };
-
-  const filteredNavItems = navItems.filter((item) =>
-    userHasRole(item.roles)
-  );
-
-  // Debug output (only for dev)
-  if (process.env.NODE_ENV === "development") {
-    console.log("Sidebar -> user:", user);
-    console.log("Sidebar -> filteredNavItems:", filteredNavItems);
-  }
 
   return (
-    <>
-      <div
-        className={`sidebar-overlay ${isOpen ? "active" : ""}`}
-        onClick={onClose}
-      ></div>
-      <div className={`sidebar ${isOpen ? "active" : ""}`}>
-        <div className="sidebar-content">
-          <div className="sidebar-header">
-            <div className="logo-container">
-              <i className="bi bi-card-checklist"></i>
-              <h4>To-do</h4>
-            </div>
-            <button className="close-sidebar d-md-none" onClick={onClose}>
-              <i className="bi bi-x-lg"></i>
-            </button>
-          </div>
-
-          <nav className="sidebar-nav">
-            {filteredNavItems.map((item, index) => (
-              <div
-                key={index}
-                className={`nav-item ${
-                  location.pathname === item.path ? "active" : ""
-                }`}
-                onClick={() => handleNavigation(item.path)}
-                style={{ cursor: "pointer" }}
-              >
-                <i className={`bi ${item.icon}`}></i>
-                <span>{item.text}</span>
-              </div>
-            ))}
-          </nav>
-
-          <div className="sidebar-footer">
-            <div className="user-section">
-              <div className="user-avatar">
-                <i className="bi bi-person"></i>
-              </div>
-              <div className="user-info">
-                <h5>{user?.name || "User"}</h5>
-                <p>{user?.email || ""}</p>
-              </div>
-            </div>
-            <button className="logout-btn" onClick={handleLogout}>
-              <i className="bi bi-box-arrow-right"></i>
-              <span>Logout</span>
-            </button>
-          </div>
-        </div>
+    <div className="sidebar">
+      <div className="sidebar-header">
+        <h2>ToDo App</h2>
       </div>
-    </>
+      <nav className="sidebar-nav">
+        <ul>
+          <li>
+            <Link to="/dashboard">📊 Dashboard</Link>
+          </li>
+          <li>
+            <Link to="/tasks">✅ Tasks</Link>
+          </li>
+          <li>
+            <Link to="/calendar">📅 Calendar</Link>
+          </li>
+          <li>
+            <Link to="/reports">📈 Reports</Link>
+          </li>
+          <li>
+            <Link to="/teams">👥 Teams</Link>
+          </li>
+        </ul>
+      </nav>
+      <div className="sidebar-footer">
+        <button className="logout-btn" onClick={handleLogout}>
+          🚪 Logout
+        </button>
+      </div>
+    </div>
   );
 };
 
